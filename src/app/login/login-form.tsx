@@ -1,65 +1,46 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MailCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Field, Input } from "@/components/ui/primitives";
 import { createClient } from "@/lib/supabase/client";
 
-const schema = z.object({ email: z.email("Enter a valid email address") });
+const schema = z.object({
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(1, "Enter your password"),
+});
 
 export function LoginForm() {
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "" },
+    defaultValues: { email: "", password: "" },
   });
+  const errors = form.formState.errors;
 
-  const onSubmit = async ({ email }: { email: string }) => {
+  const onSubmit = async ({ email, password }: z.infer<typeof schema>) => {
     setError(null);
-    const { error } = await createClient().auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false, // only the invited account can sign in
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
-    // Don't reveal whether an account exists: treat "not allowed" like success.
-    if (error && !/signups not allowed|not found|otp_disabled/i.test(error.message)) {
-      setError(error.message);
+    const { error } = await createClient().auth.signInWithPassword({ email, password });
+    if (error) {
+      // Same message whether the email or the password is wrong.
+      setError(
+        /invalid login credentials/i.test(error.message)
+          ? "That email and password don't match. Try again."
+          : error.message,
+      );
       return;
     }
-    setSentTo(email);
+    router.replace("/");
+    router.refresh(); // let the server layout pick up the new session cookie
   };
-
-  if (sentTo) {
-    return (
-      <div role="status" className="mt-6 flex gap-3 rounded-xl bg-accent-soft p-4 text-sm">
-        <MailCheck className="shrink-0 text-accent-text" aria-hidden />
-        <div>
-          <p className="font-bold">Check your email</p>
-          <p className="mt-1 text-muted">
-            If <strong className="text-text">{sentTo}</strong> has access, a sign-in link is on its
-            way. You can close this tab.
-          </p>
-          <button
-            type="button"
-            className="mt-2 min-h-11 font-semibold text-accent-text underline"
-            onClick={() => setSentTo(null)}
-          >
-            Use a different email
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-4" noValidate>
-      <Field label="Email" htmlFor="email" error={form.formState.errors.email?.message ?? error ?? undefined}>
+      <Field label="Email" htmlFor="email" error={errors.email?.message}>
         <Input
           id="email"
           type="email"
@@ -69,8 +50,16 @@ export function LoginForm() {
           {...form.register("email")}
         />
       </Field>
+      <Field label="Password" htmlFor="password" error={errors.password?.message}>
+        <Input id="password" type="password" autoComplete="current-password" {...form.register("password")} />
+      </Field>
+      {error && (
+        <p role="alert" className="rounded-xl bg-orange-soft p-3 text-sm font-semibold text-orange-text">
+          {error}
+        </p>
+      )}
       <Button type="submit" variant="primary" disabled={form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? "Sending…" : "Email me a sign-in link"}
+        {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
     </form>
   );

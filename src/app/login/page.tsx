@@ -35,8 +35,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </span>
         <h1 className="mt-5 text-2xl font-extrabold">Transition Tracker</h1>
         <p className="mt-1 text-sm text-muted">
-          Web Developer · e-Government Unit. Enter your email and we&apos;ll send you a sign-in
-          link.
+          Web Developer · e-Government Unit. Sign in with your email and password.
         </p>
         {error === "link" && (
           <p role="alert" className="mt-4 rounded-xl bg-orange-soft p-3 text-sm font-semibold text-orange-text">

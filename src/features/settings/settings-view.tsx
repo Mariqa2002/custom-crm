@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Download, Flag, LogOut, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { signOut } from "@/app/actions";
 import { RetirePhasesModal } from "@/components/phases/retire-phases-modal";
 import { PageHeader } from "@/components/shell/page-header";
@@ -133,6 +133,10 @@ export function SettingsPanel({ onSignedOut }: { onSignedOut?: () => void }) {
         <ResponsibilitiesEditor />
       </Section>
 
+      <Section title="Password" sub="Used to sign in on all your devices. At least 8 characters.">
+        <PasswordForm />
+      </Section>
+
       <Section title="Weekly report and appearance">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
@@ -195,6 +199,75 @@ export function SettingsPanel({ onSignedOut }: { onSignedOut?: () => void }) {
       </Section>
     </div>
   );
+}
+
+function PasswordForm() {
+  const id = useId();
+  const { toast } = useToast();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <form
+      className="grid gap-4 sm:grid-cols-2"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (password.length < 8) return setError("Use at least 8 characters.");
+        if (password !== confirm) return setError("The two passwords don't match.");
+        setError(null);
+        setSaving(true);
+        const { error } = await createClient().auth.updateUser({ password });
+        setSaving(false);
+        if (error) return setError(error.message);
+        setPassword("");
+        setConfirm("");
+        toast({ tone: "success", message: "Password saved. Use it to sign in on your other devices." });
+      }}
+    >
+      {/* Lets password managers attach the new password to the right account. */}
+      <input type="email" name="username" autoComplete="username" value={useProfileEmail()} readOnly hidden />
+      <Field label="New password" htmlFor={`${id}-p`}>
+        <Input
+          id={`${id}-p`}
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </Field>
+      <Field label="Type it again" htmlFor={`${id}-c`} error={error ?? undefined}>
+        <Input
+          id={`${id}-c`}
+          type="password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+      </Field>
+      <div className="sm:col-span-2">
+        <Button type="submit" variant="primary" disabled={saving}>
+          {saving ? "Saving…" : "Save password"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** The signed-in email, for the password manager hint above. */
+function useProfileEmail() {
+  const [email, setEmail] = useState("");
+  useEffect(() => {
+    let live = true;
+    void createClient()
+      .auth.getUser()
+      .then(({ data }) => live && setEmail(data.user?.email ?? ""));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return email;
 }
 
 function PhasesSettings() {

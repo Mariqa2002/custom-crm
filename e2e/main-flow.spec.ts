@@ -3,39 +3,25 @@ import { expect, test, type Page } from "@playwright/test";
 // Main flow: sign in → Dashboard → Plan my day → add and tick a task → calendar → Generate report.
 //
 // Local:      npm run db:reset && npm run test:e2e
-//             (reads the magic link from the local Mailpit inbox)
+//             (signs in as the local seed user)
 // Production: sign in once and save the session, then point the test at it:
 //             npx playwright codegen --save-storage=e2e/.auth/prod.json https://YOUR-APP
 //             E2E_BASE_URL=https://YOUR-APP E2E_STORAGE_STATE=e2e/.auth/prod.json npm run test:e2e
 
 const EMAIL = process.env.E2E_EMAIL ?? "mariqa@local.test";
-const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://127.0.0.1:54324";
+// Local seed password (supabase/seed.sql). Never put a real password here; pass E2E_PASSWORD instead.
+const PASSWORD = process.env.E2E_PASSWORD ?? "local-dev-only-123";
 
-async function signInWithMagicLink(page: Page) {
-  const since = Date.now();
+async function signIn(page: Page) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(EMAIL);
-  await page.getByRole("button", { name: /sign-in link/i }).click();
-  await expect(page.getByText(/check your email/i)).toBeVisible();
-
-  // Poll Mailpit for the newest message to this address.
-  let link: string | null = null;
-  for (let i = 0; i < 30 && !link; i++) {
-    const res = await page.request.get(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${EMAIL}"`)}`);
-    const { messages = [] } = await res.json();
-    const fresh = messages.find((m: { Created: string }) => new Date(m.Created).getTime() >= since - 2000);
-    if (fresh) {
-      const msg = await (await page.request.get(`${MAILPIT}/api/v1/message/${fresh.ID}`)).json();
-      link = (msg.HTML as string).match(/href="([^"]*\/auth\/confirm[^"]*)"/)?.[1]?.replace(/&amp;/g, "&") ?? null;
-    }
-    if (!link) await page.waitForTimeout(500);
-  }
-  expect(link, "magic link email").toBeTruthy();
-  await page.goto(link!);
+  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
 }
 
 test("sign in, plan the day, tick a task, open the calendar, generate the report", async ({ page }, info) => {
-  if (!process.env.E2E_STORAGE_STATE) await signInWithMagicLink(page);
+  if (!process.env.E2E_STORAGE_STATE) await signIn(page);
   else await page.goto("/");
 
   // Dashboard
