@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Design tokens (OKLCH). One attribute on <html> switches.            */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+  --bg: oklch(99% 0.003 248); /* #fafcfe */
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97.6% 0.005 250);
+  --border: oklch(92.5% 0.012 255);
+  --line: oklch(95.5% 0.008 255);
+  --text: oklch(21% 0.035 260);
+  --muted: oklch(49% 0.035 258);
+  /* Brand accents. The base token is the exact brand colour (fills, dots,
+     borders); -text is a darker shade that passes 4.5:1 for text. */
+  --accent: oklch(58.5% 0.216 257.9); /* #0074f8 blue, primary */
+  --accent-text: oklch(51% 0.185 258);
+  --accent-soft: oklch(95.2% 0.022 255);
+  --purple: oklch(61.8% 0.299 318.5); /* #cb00f4 */
+  --purple-text: oklch(50% 0.24 318);
+  --purple-soft: oklch(95.5% 0.032 318);
+  --green: oklch(81.7% 0.232 135.3); /* #79e21f */
+  --green-text: oklch(47% 0.13 140);
+  --green-soft: oklch(95.5% 0.06 135);
+  --orange: oklch(76.3% 0.169 66.8); /* #f89900 */
+  --orange-text: oklch(51% 0.125 55);
+  --orange-soft: oklch(96% 0.032 75);
+  --now: oklch(55% 0.21 18);
+  --on-accent: oklch(100% 0 0);
+  --shadow-card: 0 10px 30px -12px oklch(21% 0.035 260 / 0.16);
+}
+
+/* Explicit dark choice */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(17% 0.015 260);
+  --surface: oklch(21% 0.018 260);
+  --surface-2: oklch(24.5% 0.02 260);
+  --border: oklch(32% 0.022 260);
+  --line: oklch(28% 0.02 260);
+  --text: oklch(94.5% 0.01 255);
+  --muted: oklch(73% 0.025 255);
+  --accent: oklch(58.5% 0.216 257.9);
+  --accent-text: oklch(76% 0.12 255);
+  --accent-soft: oklch(30% 0.07 258);
+  --purple: oklch(64% 0.28 318.5);
+  --purple-text: oklch(78% 0.16 318);
+  --purple-soft: oklch(30% 0.09 318);
+  --green: oklch(78% 0.21 135.3);
+  --green-text: oklch(85% 0.18 135);
+  --green-soft: oklch(30% 0.06 138);
+  --orange: oklch(76.3% 0.169 66.8);
+  --orange-text: oklch(82% 0.13 70);
+  --orange-soft: oklch(31% 0.06 65);
+  --now: oklch(72% 0.17 15);
+  --shadow-card: 0 10px 30px -12px oklch(0% 0 0 / 0.6);
+}
+
+/* Follow the OS until she picks a theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: oklch(17% 0.015 260);
+    --surface: oklch(21% 0.018 260);
+    --surface-2: oklch(24.5% 0.02 260);
+    --border: oklch(32% 0.022 260);
+    --line: oklch(28% 0.02 260);
+    --text: oklch(94.5% 0.01 255);
+    --muted: oklch(73% 0.025 255);
+    --accent: oklch(58.5% 0.216 257.9);
+    --accent-text: oklch(76% 0.12 255);
+    --accent-soft: oklch(30% 0.07 258);
+    --purple: oklch(64% 0.28 318.5);
+    --purple-text: oklch(78% 0.16 318);
+    --purple-soft: oklch(30% 0.09 318);
+    --green: oklch(78% 0.21 135.3);
+    --green-text: oklch(85% 0.18 135);
+    --green-soft: oklch(30% 0.06 138);
+    --orange: oklch(76.3% 0.169 66.8);
+    --orange-text: oklch(82% 0.13 70);
+    --orange-soft: oklch(31% 0.06 65);
+    --now: oklch(72% 0.17 15);
+    --shadow-card: 0 10px 30px -12px oklch(0% 0 0 / 0.6);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-purple: var(--purple);
+  --color-purple-text: var(--purple-text);
+  --color-purple-soft: var(--purple-soft);
+  --color-green: var(--green);
+  --color-green-text: var(--green-text);
+  --color-green-soft: var(--green-soft);
+  --color-orange: var(--orange);
+  --color-orange-text: var(--orange-text);
+  --color-orange-soft: var(--orange-soft);
+  --color-now: var(--now);
+  --font-sans: var(--font-manrope), "Manrope", system-ui, sans-serif;
+  --radius-card: 18px;
+  --shadow-card: var(--shadow-card);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus rings everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Native checkbox styled to the accent */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar collapse. data-state: auto (breakpoint decides) | collapsed | expanded */
+/* ------------------------------------------------------------------ */
+.sidebar {
+  width: 84px;
+}
+.sidebar .sb-label {
+  display: none;
+}
+.sidebar .sb-only-collapsed {
+  display: flex;
+}
+.sidebar[data-state="expanded"] {
+  width: 264px;
+}
+.sidebar[data-state="expanded"] .sb-label {
+  display: revert;
+}
+.sidebar[data-state="expanded"] .sb-only-collapsed {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .sidebar[data-state="auto"] {
+    width: 264px;
+  }
+  .sidebar[data-state="auto"] .sb-label {
+    display: revert;
+  }
+  .sidebar[data-state="auto"] .sb-only-collapsed {
+    display: none;
+  }
+}
+
+/* Collapsed rail: centre each item's icon inside its hover/active pill */
+.sidebar[data-state="collapsed"] .sb-tip {
+  justify-content: center;
+  padding-inline: 0;
+  gap: 0;
+}
+@media (max-width: 1279.98px) {
+  .sidebar[data-state="auto"] .sb-tip {
+    justify-content: center;
+    padding-inline: 0;
+    gap: 0;
+  }
+}
+
+/* Collapsed-rail tooltips are rendered by the Sidebar as a fixed element, so the
+   scrolling nav can't clip them. */
+
+dialog::backdrop {
+  background: oklch(15% 0.02 260 / 0.45);
+}
+
+/* Completed phase leaving the list: fade, then collapse so the rest moves up */
+.leave-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    opacity 350ms ease,
+    grid-template-rows 450ms ease 300ms,
+    margin-bottom 450ms ease 300ms;
+}
+.leave-collapse > * {
+  min-height: 0;
+  overflow: hidden;
+}
+.leave-collapse[data-leaving="true"] {
+  opacity: 0;
+  grid-template-rows: 0fr;
+  margin-bottom: -1.25rem; /* swallow the parent's gap-5 */
+}
+
+@keyframes cal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
